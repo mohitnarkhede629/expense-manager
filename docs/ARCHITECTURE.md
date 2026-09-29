@@ -53,11 +53,22 @@ The table below defines how each transaction type behaves:
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **EXPENSE** (from Bank) | Bank Account ($-$) | *None* | Expense Category | Decreases Net Worth | **YES** |
 | **EXPENSE** (from Card) | Credit Card ($+$ Debt) | *None* | Expense Category | Decreases Net Worth | **YES** |
-| **INCOME** | *None* | Bank Account ($+$) | Income Category | Increases Net Worth | **NO** (Income) |
+| **EXPENSE** (from Cash) | Cash / Wallet ($-$) | *None* | Expense Category | Decreases Net Worth | **YES** |
+| **INCOME** (to Bank) | *None* | Bank Account ($+$) | Income Category | Increases Net Worth | **NO** (Income) |
+| **INCOME** (to Cash / Gift)| *None* | Cash / Wallet ($+$) | Income Category | Increases Net Worth | **NO** (Income) |
 | **INTERNAL TRANSFER** | Bank Account A ($-$) | Bank Account B ($+$) | *None* | Zero impact | **NO** |
+| **ATM CASH WITHDRAWAL** | Bank Account ($-$) | Cash / Wallet ($+$) | *None* | Zero impact (Cash shift) | **NO** |
+| **CASH DEPOSIT TO BANK**| Cash / Wallet ($-$) | Bank Account ($+$) | *None* | Zero impact (Cash shift) | **NO** |
 | **CREDIT CARD PAYMENT** | Bank Account ($-$) | Credit Card ($-$ Debt) | *None* | Zero impact | **NO** |
 | **INVESTMENT DEPOSIT** | Bank Account ($-$) | Investment Account ($+$) | *None* | Zero impact (Asset shift) | **NO** |
 | **INVESTMENT WITHDRAWAL**| Investment Account ($-$) | Bank Account ($+$) | *None* | Zero impact (Asset shift) | **NO** |
+
+> [!NOTE]
+> **Solving the "ATM Double-Counting" Trap:**  
+> In most simple expense apps, withdrawing cash at an ATM is incorrectly logged as an expense immediately. If you then also record spending that cash on groceries or dining, your expenses are counted twice!  
+> By treating **Physical Cash / Wallet** as a first-class Account:
+> 1. Withdrawing cash from an ATM is an **Internal Transfer** (`Bank` $\rightarrow$ `Cash/Wallet`). Net worth remains unchanged.
+> 2. You log actual expenses only when you spend the cash (`Cash/Wallet` $\rightarrow$ `Category`). Cash balance reduces accurately.
 
 ---
 
