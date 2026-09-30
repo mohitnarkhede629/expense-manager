@@ -3,10 +3,7 @@ package com.expensemanager.api.service;
 import com.expensemanager.api.dto.AuthResponse;
 import com.expensemanager.api.dto.LoginRequest;
 import com.expensemanager.api.dto.RegisterRequest;
-import com.expensemanager.api.model.Account;
-import com.expensemanager.api.model.AccountType;
 import com.expensemanager.api.model.User;
-import com.expensemanager.api.repository.AccountRepository;
 import com.expensemanager.api.repository.UserRepository;
 import com.expensemanager.api.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,8 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,9 +30,6 @@ class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
-
-    @Mock
-    private AccountRepository accountRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -66,7 +58,7 @@ class AuthServiceTest {
     class RegisterTests {
 
         @Test
-        @DisplayName("Should successfully register a new user and seed default accounts")
+        @DisplayName("Should successfully register a new user without seeding dummy accounts")
         void shouldRegisterNewUserSuccessfully() {
             RegisterRequest request = new RegisterRequest();
             request.setEmail("NewUser@Example.com ");
@@ -97,28 +89,6 @@ class AuthServiceTest {
             assertThat(capturedUser.getEmail()).isEqualTo("newuser@example.com");
             assertThat(capturedUser.getFullName()).isEqualTo("New User");
             assertThat(capturedUser.getBaseCurrency()).isEqualTo("USD");
-
-            // Verify 2 default starter accounts seeded (Savings Bank & Cash Wallet)
-            ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
-            verify(accountRepository, times(2)).save(accountCaptor.capture());
-            List<Account> seededAccounts = accountCaptor.getAllValues();
-            assertThat(seededAccounts).hasSize(2);
-
-            Account bankAcct = seededAccounts.stream()
-                    .filter(a -> a.getAccountType() == AccountType.SAVINGS)
-                    .findFirst().orElse(null);
-            assertThat(bankAcct).isNotNull();
-            assertThat(bankAcct.getName()).isEqualTo("Primary Savings Account");
-            assertThat(bankAcct.getCurrentBalance()).isEqualByComparingTo(BigDecimal.ZERO);
-            assertThat(bankAcct.getUser()).isEqualTo(savedUser);
-
-            Account cashAcct = seededAccounts.stream()
-                    .filter(a -> a.getAccountType() == AccountType.CASH)
-                    .findFirst().orElse(null);
-            assertThat(cashAcct).isNotNull();
-            assertThat(cashAcct.getName()).isEqualTo("Physical Cash Wallet");
-            assertThat(cashAcct.getCurrentBalance()).isEqualByComparingTo(BigDecimal.ZERO);
-            assertThat(cashAcct.getUser()).isEqualTo(savedUser);
 
             // Verify returned response
             assertThat(response).isNotNull();
@@ -174,7 +144,6 @@ class AuthServiceTest {
                     .hasMessage("An account with this email already exists");
 
             verify(userRepository, never()).save(any());
-            verify(accountRepository, never()).save(any());
         }
     }
 

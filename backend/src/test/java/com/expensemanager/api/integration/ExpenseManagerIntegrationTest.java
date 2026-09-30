@@ -89,7 +89,7 @@ class ExpenseManagerIntegrationTest {
                 .andExpect(jsonPath("$.email").value(email))
                 .andExpect(jsonPath("$.fullName").value("Warren Buffett"));
 
-        // 4. GET /api/accounts - verify auto-seeded Primary Savings and Physical Cash Wallet
+        // 4. GET /api/accounts - verify new user starts with 0 dummy accounts
         MvcResult accountsResult = mockMvc.perform(get("/api/accounts")
                         .header("Authorization", authToken))
                 .andExpect(status().isOk())
@@ -97,6 +97,43 @@ class ExpenseManagerIntegrationTest {
 
         List<Account> accounts = objectMapper.readValue(
                 accountsResult.getResponse().getContentAsString(),
+                new TypeReference<List<Account>>() {}
+        );
+        assertThat(accounts).isEmpty();
+
+        // 4b. POST /api/accounts/batch - Onboarding Setup Wizard creates user's configured starter accounts
+        Account initialSavings = Account.builder()
+                .name("Primary Savings Account")
+                .accountType(AccountType.SAVINGS)
+                .currency("INR")
+                .currentBalance(BigDecimal.ZERO)
+                .institutionName("Bank")
+                .isActive(true)
+                .build();
+
+        Account initialCash = Account.builder()
+                .name("Physical Cash Wallet")
+                .accountType(AccountType.CASH)
+                .currency("INR")
+                .currentBalance(BigDecimal.ZERO)
+                .institutionName("Cash")
+                .isActive(true)
+                .build();
+
+        mockMvc.perform(post("/api/accounts/batch")
+                        .header("Authorization", authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(List.of(initialSavings, initialCash))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+
+        MvcResult reloadedResult = mockMvc.perform(get("/api/accounts")
+                        .header("Authorization", authToken))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        accounts = objectMapper.readValue(
+                reloadedResult.getResponse().getContentAsString(),
                 new TypeReference<List<Account>>() {}
         );
         assertThat(accounts).hasSize(2);

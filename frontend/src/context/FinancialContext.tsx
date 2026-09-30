@@ -11,6 +11,7 @@ interface FinancialContextType {
   loading: boolean;
   addTransaction: (tx: Omit<Transaction, 'id' | 'userId'>) => Promise<void>;
   addAccount: (account: Omit<Account, 'id' | 'userId'>) => Promise<void>;
+  addAccountsBatch: (accounts: Omit<Account, 'id' | 'userId'>[]) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
@@ -164,6 +165,27 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     await refreshData();
   };
 
+  const addAccountsBatch = async (accountsData: Omit<Account, 'id' | 'userId'>[]) => {
+    const payload = accountsData.map((accData) => ({
+      name: accData.name,
+      accountType: accData.accountType,
+      currency: accData.currency || 'INR',
+      currentBalance: accData.currentBalance ?? 0,
+      institutionName: accData.institutionName,
+      accountNumberLast4: accData.accountNumberLast4,
+      creditLimit: accData.creditLimit,
+      billingCycleDay: accData.billingCycleDay,
+      paymentDueDay: accData.paymentDueDay,
+      investmentType: accData.investmentType,
+      isActive: true,
+    }));
+
+    await api.post('/accounts/batch', payload);
+
+    // Re-fetch live accounts
+    await refreshData();
+  };
+
   return (
     <FinancialContext.Provider
       value={{
@@ -174,6 +196,7 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         loading,
         addTransaction,
         addAccount,
+        addAccountsBatch,
         refreshData,
       }}
     >

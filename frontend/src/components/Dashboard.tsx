@@ -8,16 +8,18 @@ import {
   Landmark, 
   Wallet,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 import { useFinancial } from '../context/FinancialContext';
 
 interface DashboardProps {
   onOpenNewTx: () => void;
   setActiveTab: (tab: string) => void;
+  onOpenWizard?: () => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onOpenNewTx, setActiveTab }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ onOpenNewTx, setActiveTab, onOpenWizard }) => {
   const { accounts, transactions, netWorth, categories } = useFinancial();
 
   // Calculate monthly stats from transactions
@@ -177,14 +179,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenNewTx, setActiveTab 
         </div>
 
         {accounts.length === 0 ? (
-          <div className="bg-white rounded-2xl p-6 border border-slate-200 text-center">
-            <p className="text-xs text-slate-500">No accounts created yet.</p>
-            <button
-              onClick={() => setActiveTab('accounts')}
-              className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
-            >
-              + Add an Account
-            </button>
+          <div className="bg-gradient-to-r from-indigo-50/90 via-violet-50/70 to-slate-50 rounded-3xl p-6 sm:p-8 border border-indigo-100 text-center flex flex-col items-center justify-center shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-200 mb-3">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900">Get Started with Guided Setup</h3>
+            <p className="text-xs text-slate-500 max-w-md mt-1 leading-relaxed">
+              Link your primary bank account, credit cards, physical cash, and investment portfolio in ~1 minute to calibrate your dashboard and live net worth.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2.5 justify-center">
+              {onOpenWizard && (
+                <button
+                  onClick={onOpenWizard}
+                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-indigo-200 transition-all"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Launch Step-by-Step Setup</span>
+                </button>
+              )}
+              <button
+                onClick={() => setActiveTab('accounts')}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 transition-colors"
+              >
+                + Add Manually
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

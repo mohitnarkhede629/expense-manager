@@ -141,4 +141,76 @@ class AccountControllerTest {
             SecurityContextHolder.clearContext();
         }
     }
+
+    @Test
+    @DisplayName("POST /api/accounts/batch - creates multiple accounts in batch with authenticated user")
+    void shouldCreateMultipleAccountsInBatch() throws Exception {
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(testUser, null, null);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        try {
+            Account acct1 = Account.builder()
+                    .name("HDFC Salary Account")
+                    .accountType(AccountType.SAVINGS)
+                    .currentBalance(new BigDecimal("25000.00"))
+                    .institutionName("HDFC")
+                    .build();
+
+            Account acct2 = Account.builder()
+                    .name("Amazon ICICI Card")
+                    .accountType(AccountType.CREDIT_CARD)
+                    .creditLimit(new BigDecimal("100000.00"))
+                    .currentBalance(new BigDecimal("4500.00"))
+                    .build();
+
+            when(accountRepository.saveAll(any())).thenAnswer(i -> {
+                List<Account> list = i.getArgument(0);
+                long idGen = 201L;
+                for (Account a : list) {
+                    a.setId(idGen++);
+                }
+                return list;
+            });
+
+            mockMvc.perform(post("/api/accounts/batch")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(List.of(acct1, acct2))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(2))
+                    .andExpect(jsonPath("$[0].name").value("HDFC Salary Account"))
+                    .andExpect(jsonPath("$[0].currency").value("INR"))
+                    .andExpect(jsonPath("$[0].isActive").value(true))
+                    .andExpect(jsonPath("$[1].name").value("Amazon ICICI Card"))
+                    .andExpect(jsonPath("$[1].creditLimit").value(100000.00));
+
+            @SuppressWarnings("unchecked")
+            ArgumentCaptor<List<Account>> captor = ArgumentCaptor.forClass(List.class);
+            verify(accountRepository).saveAll(captor.capture());
+            List<Account> savedList = captor.getValue();
+            assertThat(savedList).hasSize(2);
+            assertThat(savedList.get(0).getUser()).isEqualTo(testUser);
+            assertThat(savedList.get(1).getUser()).isEqualTo(testUser);
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
+    @DisplayName("POST /api/accounts/batch - returns 400 when accounts list is empty")
+    void shouldReturnBadRequestWhenBatchListIsEmpty() throws Exception {
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(testUser, null, null);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        try {
+            mockMvc.perform(post("/api/accounts/batch")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(List.of())))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value("Accounts list cannot be empty"));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
 }

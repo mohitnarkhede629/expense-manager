@@ -1,14 +1,15 @@
 import React from 'react';
-import { LayoutDashboard, Wallet, CreditCard, ArrowLeftRight, BarChart3, Plus, LogOut, User } from 'lucide-react';
+import { LayoutDashboard, Wallet, CreditCard, ArrowLeftRight, BarChart3, Plus, LogOut, User, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface NavbarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   onOpenNewTx: () => void;
+  onOpenWizard?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onOpenNewTx }) => {
+export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onOpenNewTx, onOpenWizard }) => {
   const { user, logout } = useAuth();
 
   const navItems = [
@@ -65,6 +66,17 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onOpenN
                 </span>
                 <span className="font-semibold max-w-[120px] truncate">{user.fullName}</span>
               </div>
+            )}
+
+            {onOpenWizard && (
+              <button
+                onClick={onOpenWizard}
+                title="Launch Guided Setup Wizard"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-all border border-indigo-100"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                <span className="hidden sm:inline">Setup Wizard</span>
+              </button>
             )}
 
             <button

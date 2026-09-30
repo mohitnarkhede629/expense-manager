@@ -3,10 +3,7 @@ package com.expensemanager.api.service;
 import com.expensemanager.api.dto.AuthResponse;
 import com.expensemanager.api.dto.LoginRequest;
 import com.expensemanager.api.dto.RegisterRequest;
-import com.expensemanager.api.model.Account;
-import com.expensemanager.api.model.AccountType;
 import com.expensemanager.api.model.User;
-import com.expensemanager.api.repository.AccountRepository;
 import com.expensemanager.api.repository.UserRepository;
 import com.expensemanager.api.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -15,14 +12,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
@@ -40,30 +34,6 @@ public class AuthService {
                 .build();
 
         User savedUser = userRepository.save(user);
-
-        // Auto-seed starter accounts for new user: Primary Bank Account & Physical Cash Wallet
-        Account bankAccount = Account.builder()
-                .user(savedUser)
-                .name("Primary Savings Account")
-                .accountType(AccountType.SAVINGS)
-                .currency(savedUser.getBaseCurrency())
-                .currentBalance(BigDecimal.ZERO)
-                .institutionName("Bank")
-                .isActive(true)
-                .build();
-
-        Account cashAccount = Account.builder()
-                .user(savedUser)
-                .name("Physical Cash Wallet")
-                .accountType(AccountType.CASH)
-                .currency(savedUser.getBaseCurrency())
-                .currentBalance(BigDecimal.ZERO)
-                .institutionName("Cash")
-                .isActive(true)
-                .build();
-
-        accountRepository.save(bankAccount);
-        accountRepository.save(cashAccount);
 
         String token = jwtService.generateToken(savedUser.getId(), savedUser.getEmail());
 

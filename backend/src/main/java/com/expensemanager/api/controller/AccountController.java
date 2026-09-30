@@ -38,4 +38,28 @@ public class AccountController {
         account.setUser(user);
         return ResponseEntity.ok(accountRepository.save(account));
     }
+
+    @PostMapping("/batch")
+    public ResponseEntity<?> createAccountsBatch(
+            @AuthenticationPrincipal User user,
+            @RequestBody List<Account> accounts
+    ) {
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("message", "User not authenticated"));
+        }
+        if (accounts == null || accounts.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Accounts list cannot be empty"));
+        }
+        accounts.forEach(acc -> {
+            acc.setUser(user);
+            if (acc.getIsActive() == null) {
+                acc.setIsActive(true);
+            }
+            if (acc.getCurrency() == null || acc.getCurrency().isBlank()) {
+                acc.setCurrency(user.getBaseCurrency() != null ? user.getBaseCurrency() : "INR");
+            }
+        });
+        List<Account> savedAccounts = accountRepository.saveAll(accounts);
+        return ResponseEntity.ok(savedAccounts);
+    }
 }
