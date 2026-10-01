@@ -150,6 +150,47 @@ class TransactionControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/transactions - parses ISO string with Z or without timezone")
+    void shouldAcceptIsoDateTime() throws Exception {
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(testUser, null, null);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        try {
+            when(transactionService.recordTransaction(
+                    eq(testUser),
+                    eq(TransactionType.EXPENSE),
+                    eq(new BigDecimal("150.00")),
+                    any(),
+                    eq(10L),
+                    eq(null),
+                    eq(20L),
+                    eq("Coffee"),
+                    eq("Starbucks")
+            )).thenReturn(testTransaction);
+
+            String jsonPayload = """
+                {
+                    "transactionType": "EXPENSE",
+                    "amount": 150.00,
+                    "transactionDate": "2026-10-01T10:00:00.000Z",
+                    "sourceAccountId": 10,
+                    "categoryId": 20,
+                    "description": "Coffee",
+                    "payeeMerchant": "Starbucks"
+                }
+                """;
+
+            mockMvc.perform(post("/api/transactions")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonPayload))
+                    .andExpect(status().isOk());
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
     @DisplayName("POST /api/transactions - 400 Bad Request when amount is missing")
     void shouldReturn400WhenAmountMissing() throws Exception {
         CreateTransactionRequest request = new CreateTransactionRequest();
