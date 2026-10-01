@@ -51,7 +51,9 @@ export const AuthenticatedContent: React.FC = () => {
           />
         )}
         {activeTab === 'accounts' && <AccountsList />}
-        {activeTab === 'transactions' && <TransactionsList />}
+        {activeTab === 'transactions' && (
+          <TransactionsList onOpenNewTx={() => setIsNewTxOpen(true)} />
+        )}
         {activeTab === 'cards' && (
           <CreditCardsView onOpenNewTx={() => setIsNewTxOpen(true)} />
         )}

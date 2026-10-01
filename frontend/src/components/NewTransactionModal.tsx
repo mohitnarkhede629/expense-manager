@@ -18,6 +18,12 @@ interface NewTransactionModalProps {
   onClose: () => void;
 }
 
+const getLocalDateTimeString = () => {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 16);
+};
+
 export const NewTransactionModal: React.FC<NewTransactionModalProps> = ({ isOpen, onClose }) => {
   const { accounts, categories, addTransaction } = useFinancial();
 
@@ -28,7 +34,7 @@ export const NewTransactionModal: React.FC<NewTransactionModalProps> = ({ isOpen
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
   const [description, setDescription] = useState<string>('');
   const [payee, setPayee] = useState<string>('');
-  const [txDate, setTxDate] = useState<string>(() => new Date().toISOString().slice(0, 16));
+  const [txDate, setTxDate] = useState<string>(() => getLocalDateTimeString());
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
